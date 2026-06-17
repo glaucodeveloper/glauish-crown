@@ -130,12 +130,20 @@ proc addText*(rx: RxRender; s: string) =
 proc addRaw*(rx: RxRender; s: string) =
   rx.buf.add(s)
 
-proc addScriptSrc*(rx: RxRender; path: string; defer = true; module = false) =
+proc addScriptSrc*(
+  rx: RxRender;
+  path: string;
+  deferLoad = true;
+  moduleScript = false
+) =
   var attrs: seq[Attr] = @[src(path)]
-  if defer:
+
+  if deferLoad:
     attrs.add(flag("defer"))
-  if module:
-    attrs.add(typ("module"))
+
+  if moduleScript:
+    attrs.add(a("type", "module"))
+
   rx.openTag("script", attrs)
   rx.closeTag("script")
 
@@ -207,8 +215,9 @@ template main*(attrs: varargs[Attr]; body: untyped) =
 template section*(attrs: varargs[Attr]; body: untyped) =
   tag("section", attrs): body
 
-template div*(attrs: varargs[Attr]; body: untyped) =
-  tag("div", attrs): body
+template box*(attrs: varargs[Attr]; body: untyped) =
+  tag("div", attrs):
+    body
 
 template form*(attrs: varargs[Attr]; body: untyped) =
   tag("form", attrs): body

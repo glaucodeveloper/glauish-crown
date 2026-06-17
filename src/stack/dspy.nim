@@ -1,3 +1,7 @@
+## stack/dspy.nim
+## Minimal DSPy-like abstraction over the real RLM execution stack.
+## Every prediction uses ctx.app.callModel through the real RLM app.
+
 import std/[json, strformat]
 
 import ./rlm
@@ -15,7 +19,6 @@ type
 
   DspyContext* = ref object
     app*: RLMApp
-    fake*: bool
 
 proc signature*(name, inputType, outputType, description: string): DspySignature =
   DspySignature(
@@ -28,8 +31,8 @@ proc signature*(name, inputType, outputType, description: string): DspySignature
 proc dspyModule*(name: string; sig: DspySignature): DspyModule =
   DspyModule(name: name, signature: sig)
 
-proc newDspyContext*(app: RLMApp = defaultRLM(); fake = true): DspyContext =
-  DspyContext(app: app, fake: fake)
+proc newDspyContext*(app: RLMApp = defaultRLM()): DspyContext =
+  DspyContext(app: app)
 
 proc ensureTrace*(ctx: DspyContext; name: string; input: JsonNode) =
   if ctx.app.config.traceDir.len > 0:
@@ -59,7 +62,7 @@ Retorne somente JSON, sem markdown.
 """).content
   parseJsonLoose(raw)
 
-proc predictJson*(ctx: DspyContext; m: DspyModule; prompt: string; fakeValue: JsonNode): JsonNode =
+proc predictJson*(ctx: DspyContext; m: DspyModule; prompt: string): JsonNode =
   let spanId = ctx.app.startSpan(
     m.name,
     "dspy_module",
@@ -72,18 +75,15 @@ proc predictJson*(ctx: DspyContext; m: DspyModule; prompt: string; fakeValue: Js
   )
 
   try:
-    if ctx.fake:
-      result = fakeValue
-    else:
-      let raw = ctx.app.callModel(
-        prompt,
-        system = "Você é a inferência textual comum da aplicação. Retorne somente o formato solicitado."
-      ).content
+    let raw = ctx.app.callModel(
+      prompt,
+      system = "Você é a inferência textual comum da aplicação. Retorne somente o formato solicitado."
+    ).content
 
-      try:
-        result = parseJsonLoose(raw)
-      except CatchableError as e:
-        result = repairJsonWithModel(ctx, prompt, raw, e.msg)
+    try:
+      result = parseJsonLoose(raw)
+    except CatchableError as e:
+      result = repairJsonWithModel(ctx, prompt, raw, e.msg)
 
     ctx.app.endSpan(
       spanId,
@@ -98,7 +98,7 @@ proc predictJson*(ctx: DspyContext; m: DspyModule; prompt: string; fakeValue: Js
     ctx.app.endSpan(spanId, %*{}, status = "error", error = e.msg)
     raise
 
-proc predictText*(ctx: DspyContext; m: DspyModule; prompt: string; fakeValue: string): string =
+proc predictText*(ctx: DspyContext; m: DspyModule; prompt: string): string =
   let spanId = ctx.app.startSpan(
     m.name,
     "dspy_module",
@@ -111,7 +111,7 @@ proc predictText*(ctx: DspyContext; m: DspyModule; prompt: string; fakeValue: st
   )
 
   try:
-    result = if ctx.fake: fakeValue else: ctx.app.callModel(prompt).content
+    result = ctx.app.callModel(prompt).content
 
     ctx.app.endSpan(
       spanId,

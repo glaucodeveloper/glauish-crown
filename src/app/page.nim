@@ -12,11 +12,11 @@ proc page*(req: Request): string =
     html(a("lang", "pt-BR")):
       head():
         meta(a("charset", "utf-8"))
-        meta(name("viewport"), a("content", "width=device-width, initial-scale=1"))
+
         styleSrc("/workspace.css")
       body():
         main(cls("rx-page")):
-          div(cls("rx-shell")):
+          box(cls("rx-shell")):
             h1(cls("rx-title")):
               text "BNCC RLM"
             p(cls("rx-subtitle")):
