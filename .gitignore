@@ -1,0 +1,9 @@
+/bin/
+/nimcache/
+*.exe
+*.dll
+*.so
+*.dylib
+.rlm/
+data/*.json
+data/*.txt
