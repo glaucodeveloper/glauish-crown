@@ -1,63 +1,33 @@
-# nim_bncc_study_rlm_stack
+# Glauish Crown
 
-Projeto deliberadamente **não modular no domínio**: o estudo BNCC, domain models, signatures e módulos DSPy-like ficam todos em `src/main.nim`.
+Stack experimental em Nim para estudar fluxos BNCC com agentes RLM, workspace, ferramentas, rastreamento e REPL.
 
-A única stack reutilizável/importável é:
+## Componentes
 
-- `src/stack/rlm.nim`: RLM, workspace, tools, traces, model call OpenAI-compatible e REPL.
-- `src/web/crown_adapter.nim`: helpers Crown-like para página/API.
-- `src/web/crown_api_server.nim`: API local para chamar o estudo por HTTP.
-- `src/native/happyx_native_shell.nim`: shell HappyX Native stub/importável, sem acoplar o main.
-- `assets/www/reactish.js`: micro runtime frontend-only estilo React-like para páginas Crown.
+- `src/main.nim`: estudo de domínio BNCC e fluxo principal.
+- `src/stack/rlm.nim`: runtime RLM, workspace, tools, chamadas OpenAI-compatible, traces e REPL.
+- `src/web/crown_adapter.nim` e `src/web/crown_api_server.nim`: adaptação e API HTTP local.
+- `src/native/happyx_native_shell.nim`: experimento isolado de shell nativo.
+- `public/`: interface web de demonstração.
 
-## Rodar estudo com fake LLM
+O domínio BNCC permanece concentrado em `src/main.nim`; os módulos reutilizáveis ficam nas pastas `stack`, `web` e `native`.
 
-```sh
+## Executar
+
+Com Nim e Nimble instalados:
+
+```bash
 nimble demo
-# ou
+```
+
+Ou compile diretamente o programa principal:
+
+```bash
 nim c -r --path:src src/main.nim
 ```
 
-## Rodar com llama-server/OpenAI-compatible
+O projeto aceita um LLM local ou outro endpoint OpenAI-compatible para os fluxos que chamam um modelo. O modo de demonstração sem modelo é o caminho mais simples para explorar a estrutura.
 
-```sh
-curl http://127.0.0.1:1223/v1/models
+## Estado
 
-OPENAI_BASE_URL="http://127.0.0.1:1223/v1" \
-OPENAI_API_KEY="local" \
-MODEL_NAME="google/gemma-4-e4b" \
-nim c -r --path:src src/main.nim --real
-```
-
-## Rodar API Crown-like
-
-```sh
-nimble api
-# GET  http://127.0.0.1:5050/
-# GET  http://127.0.0.1:5050/assets/reactish.js
-# POST http://127.0.0.1:5050/api/run
-```
-
-Teste:
-
-```sh
-curl -X POST http://127.0.0.1:5050/api/run \
-  -H 'Content-Type: application/json' \
-  -d '{"tema":"liberdade de expressão e discurso de ódio em comentários online","quantidade":2,"fake":true}'
-```
-
-## RLM REPL
-
-```sh
-nimble repl
-```
-
-## Saídas
-
-```text
-data/text_base.json
-data/quiz.json
-data/rewrite_report.txt
-.rlm/traces.jsonl
-.rlm/spans.jsonl
-```
+Experimento de engenharia e domínio, não uma plataforma BNCC pronta para produção. As integrações de shell nativo e runtime frontend também são protótipos.
